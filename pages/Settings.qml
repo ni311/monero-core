@@ -32,6 +32,8 @@ import QtQuick.Controls.Styles 1.4
 import QtQuick.Layouts 1.1
 import QtQuick.Dialogs 1.2
 import "../version.js" as Version
+import "../js/Windows.js" as Windows
+import "../js/Utils.js" as Utils
 
 
 import "../components"
@@ -39,6 +41,7 @@ import moneroComponents.Clipboard 1.0
 
 Rectangle {
     property bool viewOnly: false
+    property alias settingsHeight: mainLayout.height
     id: page
 
     color: "transparent"
@@ -48,7 +51,7 @@ Rectangle {
         console.log("Settings page loaded");
 
         if(typeof daemonManager != "undefined"){
-            appWindow.daemonRunning =  daemonManager.running(persistentSettings.testnet);
+            appWindow.daemonRunning = persistentSettings.useRemoteNode ? false : daemonManager.running(persistentSettings.nettype);
         }
 
         logLevelDropdown.update()
@@ -201,29 +204,29 @@ Rectangle {
             Layout.fillWidth: true
 
             LabelSubheader {
-                text: qsTr("Wallet mode") + translationManager.emptyString
+                text: qsTr("Daemon mode") + translationManager.emptyString
             }
         }
 
-        RowLayout {
-            StandardButton {
+        ColumnLayout {
+            RadioButton {
                 id: remoteDisconnect
-                small: true
-                enabled: persistentSettings.useRemoteNode
-                Layout.fillWidth: false
+                checked: !persistentSettings.useRemoteNode
                 text: qsTr("Local Node") + translationManager.emptyString
                 onClicked: {
+                    persistentSettings.useRemoteNode = false;
+                    remoteConnect.checked = false;
                     appWindow.disconnectRemoteNode();
                 }
             }
 
-            StandardButton {
+            RadioButton {
                 id: remoteConnect
-                small: true
-                enabled: !persistentSettings.useRemoteNode
-                Layout.fillWidth: false
+                checked: persistentSettings.useRemoteNode
                 text: qsTr("Remote Node") + translationManager.emptyString
                 onClicked: {
+                    persistentSettings.useRemoteNode = true;
+                    remoteDisconnect.checked = false;
                     appWindow.connectRemoteNode();
                 }
             }
@@ -251,7 +254,7 @@ Rectangle {
 
                     lineEditBackgroundColor: "transparent"
                     lineEditFontColor: "white"
-                    lineEditBorderColor: Qt.rgba(255, 255, 255, 0.35)
+                    lineEditBorderColor: Style.inputBorderColorActive
 
                     daemonAddrLabelText: qsTr("Address")
                     daemonPortLabelText: qsTr("Port")
@@ -500,7 +503,7 @@ Rectangle {
                 visible: !isMobile
                 id: customDecorationsCheckBox
                 checked: persistentSettings.customDecorations
-                onClicked: appWindow.setCustomWindowDecorations(checked)
+                onClicked: Windows.setCustomWindowDecorations(checked)
                 text: qsTr("Custom decorations") + translationManager.emptyString
             }
         }
@@ -537,7 +540,7 @@ Rectangle {
 
                 ListModel {
                      id: logLevel
-                     ListElement { name: "wow"; column1: "0"; }
+                     ListElement { name: "none"; column1: "0"; }
                      ListElement { column1: "1"; }
                      ListElement { column1: "2"; }
                      ListElement { column1: "3"; }
@@ -567,7 +570,6 @@ Rectangle {
                     pressedColor: "#202020"
                 }
                 // Make sure dropdown is on top
-                z: parent.z + 30
             }
 
             ColumnLayout {
@@ -577,6 +579,8 @@ Rectangle {
             ColumnLayout {
                 Layout.fillWidth: true
             }
+
+            z: parent.z + 1
         }
 
         ColumnLayout {
@@ -585,7 +589,7 @@ Rectangle {
                 Layout.fillWidth: true
                 text: appWindow.persistentSettings.logCategories
                 labelText: "Log Categories"
-                placeholderText: qsTr("(e.g. *:WARNING,net.p2p:DEBUG)") + translationManager.emptyString
+                placeholderText: "(e.g. *:WARNING,net.p2p:DEBUG)"
                 enabled: logLevelDropdown.currentIndex === 5
                 onEditingFinished: {
                     if(enabled) {
@@ -619,112 +623,121 @@ Rectangle {
             }
         }
 
-        TextBlock {
-            Layout.topMargin: 8
-            font.pixelSize: 14
-            Layout.fillWidth: true
-            text: qsTr("GUI version: ") + Version.GUI_VERSION + translationManager.emptyString
-        }
-        TextBlock {
-            id: guiMoneroVersion
-            Layout.fillWidth: true
-            font.pixelSize: 14
-            text: qsTr("Embedded Monero version: ") + Version.GUI_MONERO_VERSION + translationManager.emptyString
-        }
-        TextBlock {
-            id: restoreHeightText
-            Layout.fillWidth: true
-            font.pixelSize: 14
-            textFormat: Text.RichText
-            property var txt: "<style type='text/css'>a {text-decoration: none; color: #FF6C3C}</style>" + qsTr("Wallet creation height: ") + (currentWallet ? currentWallet.walletCreationHeight : "") + translationManager.emptyString
-            property var linkTxt: qsTr(" <a href='#'>(Click to change)</a>") + translationManager.emptyString
-            text: (typeof currentWallet == "undefined") ? "" : txt + linkTxt
+        GridLayout {
+            id: grid
+            columns: 2
+            columnSpacing: 20 * scaleRatio
 
-            onLinkActivated: {
-                restoreHeightRow.visible = true;
+            TextBlock {
+                font.pixelSize: 14
+                text: qsTr("GUI version: ") + translationManager.emptyString
             }
 
-        }
+            TextBlock {
+                font.pixelSize: 14
+                font.bold: true
+                text: Version.GUI_VERSION + " (Qt " + qtRuntimeVersion + ")" + translationManager.emptyString
+            }
 
-        RowLayout {
-            id: restoreHeightRow
-            visible: false
-            LineEdit {
-                id: restoreHeight
-                Layout.preferredWidth: 80
+            TextBlock {
+                id: guiMoneroVersion
+                font.pixelSize: 14
+                text: qsTr("Embedded Monero version: ") + translationManager.emptyString
+            }
+
+            TextBlock {
+                font.pixelSize: 14
+                font.bold: true
+                text: Version.GUI_MONERO_VERSION + translationManager.emptyString
+            }
+
+            TextBlock {
                 Layout.fillWidth: true
-                text: currentWallet ? currentWallet.walletCreationHeight : "0"
-                validator: IntValidator {
-                    bottom:0
-                }
+                font.pixelSize: 14
+                text: qsTr("Wallet name: ") + translationManager.emptyString
             }
 
-            StandardButton {
-                id: restoreHeightSave
-                small: true
-                Layout.fillWidth: false
-                Layout.leftMargin: 30
-                text: qsTr("Save") + translationManager.emptyString
+            TextBlock {
+                Layout.fillWidth: true
+                font.pixelSize: 14
+                font.bold: true
+                text: walletName + translationManager.emptyString
+            }
 
-                onClicked: {
-                    currentWallet.walletCreationHeight = restoreHeight.text
-                    // Restore height is saved in .keys file. Set password to trigger rewrite.
-                    currentWallet.setPassword(appWindow.walletPassword)
-                    restoreHeightRow.visible = false
+            TextBlock {
+                id: restoreHeight
+                font.pixelSize: 14
+                textFormat: Text.RichText
+                text: (typeof currentWallet == "undefined") ? "" : qsTr("Wallet creation height: ") + translationManager.emptyString
+            }
 
-                    // Show confirmation dialog
-                    confirmationDialog.title = qsTr("Rescan wallet cache") + translationManager.emptyString;
-                    confirmationDialog.text  = qsTr("Are you sure you want to rebuild the wallet cache?\n"
-                                                    + "The following information will be deleted\n"
-                                                    + "- Recipient addresses\n"
-                                                    + "- Tx keys\n"
-                                                    + "- Tx descriptions\n\n"
-                                                    + "The old wallet cache file will be renamed and can be restored later.\n"
-                                                    );
-                    confirmationDialog.icon = StandardIcon.Question
-                    confirmationDialog.cancelText = qsTr("Cancel")
-                    confirmationDialog.onAcceptedCallback = function() {
-                        walletManager.closeWallet();
-                        walletManager.clearWalletCache(persistentSettings.wallet_path);
-                        walletManager.openWalletAsync(persistentSettings.wallet_path, appWindow.walletPassword,
-                                                          persistentSettings.nettype);
+            TextBlock {
+                id: restoreHeightText
+                textFormat: Text.RichText
+                font.pixelSize: 14
+                font.bold: true
+                property var style: "<style type='text/css'>a {cursor:pointer;text-decoration: none; color: #FF6C3C}</style>"
+                text: (currentWallet ? currentWallet.walletCreationHeight : "") + style + qsTr(" <a href='#'> (Click to change)</a>") + translationManager.emptyString
+                onLinkActivated: {
+                    inputDialog.labelText = qsTr("Set a new restore height:") + translationManager.emptyString;
+                    inputDialog.inputText = currentWallet ? currentWallet.walletCreationHeight : "0";
+                    inputDialog.onAcceptedCallback = function() {
+                        var _restoreHeight = inputDialog.inputText;
+                        if(Utils.isNumeric(_restoreHeight)){
+                            _restoreHeight = parseInt(_restoreHeight);
+                            if(_restoreHeight >= 0) {
+                                currentWallet.walletCreationHeight = restoreHeightEdit.text
+                                // Restore height is saved in .keys file. Set password to trigger rewrite.
+                                currentWallet.setPassword(appWindow.walletPassword)
+
+                                // Show confirmation dialog
+                                confirmationDialog.title = qsTr("Rescan wallet cache") + translationManager.emptyString;
+                                confirmationDialog.text  = qsTr("Are you sure you want to rebuild the wallet cache?\n"
+                                                                + "The following information will be deleted\n"
+                                                                + "- Recipient addresses\n"
+                                                                + "- Tx keys\n"
+                                                                + "- Tx descriptions\n\n"
+                                                                + "The old wallet cache file will be renamed and can be restored later.\n"
+                                                                );
+                                confirmationDialog.icon = StandardIcon.Question
+                                confirmationDialog.cancelText = qsTr("Cancel")
+                                confirmationDialog.onAcceptedCallback = function() {
+                                    walletManager.closeWallet();
+                                    walletManager.clearWalletCache(persistentSettings.wallet_path);
+                                    walletManager.openWalletAsync(persistentSettings.wallet_path, appWindow.walletPassword,
+                                                                      persistentSettings.nettype);
+                                }
+
+                                confirmationDialog.onRejectedCallback = null;
+                                confirmationDialog.open()
+                                return;
+                            }
+                        }
+
+                        appWindow.showStatusMessage(qsTr("Invalid restore height specified. Must be a number."),3);
                     }
+                    inputDialog.onRejectedCallback = null;
+                    inputDialog.open()
+                }
 
-                    confirmationDialog.onRejectedCallback = null;
-
-                    confirmationDialog.open()
-
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.NoButton
+                    cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
                 }
             }
-        }
 
+            TextBlock {
+                Layout.fillWidth: true
+                font.pixelSize: 14
+                text: qsTr("Wallet log path: ") + translationManager.emptyString
+            }
 
-
-        TextBlock {
-            Layout.fillWidth: true
-            font.pixelSize: 14
-            text:  (!currentWallet) ? "" : qsTr("Wallet log path: ") + currentWallet.walletLogPath + translationManager.emptyString
-        }
-        TextBlock {
-            Layout.fillWidth: true
-            font.pixelSize: 14
-            text: qsTr("Wallet Name: ") + walletName + translationManager.emptyString
-        }
-        TextBlock {
-            Layout.fillWidth: true
-            font.pixelSize: 14
-            text:  (!currentWallet) ? "" : qsTr("Daemon log path: ") + currentWallet.daemonLogPath + translationManager.emptyString
-        }
-    }
-
-    // Daemon console
-    DaemonConsole {
-        id: daemonConsolePopup
-        height:500
-        width:800
-        title: qsTr("Daemon log") + translationManager.emptyString
-        onAccepted: {
-            close();
+            TextBlock {
+                Layout.fillWidth: true
+                font.pixelSize: 14
+                text: walletLogPath
+            }
         }
     }
 
@@ -747,10 +760,10 @@ Rectangle {
                     confirmationDialog.text  += qsTr("Error: Filesystem is read only") + "\n\n"                  
                 }
                 
-                if(validator.storageAvailable < 20) {
-                    confirmationDialog.text  += qsTr("Warning: There's only %1 GB available on the device. Blockchain requires ~%2 GB of data.").arg(validator.storageAvailable).arg(15) + "\n\n"     
+                if(validator.storageAvailable < estimatedBlockchainSize) {
+                    confirmationDialog.text  += qsTr("Warning: There's only %1 GB available on the device. Blockchain requires ~%2 GB of data.").arg(validator.storageAvailable).arg(estimatedBlockchainSize) + "\n\n"     
                 } else {
-                    confirmationDialog.text  += qsTr("Note: There's %1 GB available on the device. Blockchain requires ~%2 GB of data.").arg(validator.storageAvailable).arg(15) + "\n\n"
+                    confirmationDialog.text  += qsTr("Note: There's %1 GB available on the device. Blockchain requires ~%2 GB of data.").arg(validator.storageAvailable).arg(estimatedBlockchainSize) + "\n\n"
                 }
                 
                 if(!validator.lmdbExists) {
@@ -792,7 +805,7 @@ Rectangle {
 
     function onDaemonConsoleUpdated(message){
         // Update daemon console
-        daemonConsolePopup.textArea.append(message)
+        daemonConsolePopup.textArea.logMessage(message)
     }
 
 

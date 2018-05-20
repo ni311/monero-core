@@ -722,17 +722,6 @@ QString Wallet::getDaemonLogPath() const
     return QString::fromStdString(m_walletImpl->getDefaultDataDir()) + "/bitmonero.log";
 }
 
-QString Wallet::getWalletLogPath() const
-{
-    const QString filename("monero-wallet-gui.log");
-
-#ifdef Q_OS_MACOS
-    return QStandardPaths::standardLocations(QStandardPaths::HomeLocation).at(0) + "/Library/Logs/" + filename;
-#else
-    return QCoreApplication::applicationDirPath() + "/" + filename;
-#endif
-}
-
 bool Wallet::blackballOutput(const QString &pubkey)
 {
     QList<QString> list;
@@ -863,7 +852,8 @@ Wallet::Wallet(Monero::Wallet *w, QObject *parent)
     m_history = new TransactionHistory(m_walletImpl->history(), this);
     m_addressBook = new AddressBook(m_walletImpl->addressBook(), this);
     m_subaddress = new Subaddress(m_walletImpl->subaddress(), this);
-    m_walletImpl->setListener(new WalletListenerImpl(this));
+    m_walletListener = new WalletListenerImpl(this);
+    m_walletImpl->setListener(m_walletListener);
     m_connectionStatus = Wallet::ConnectionStatus_Disconnected;
     // start cache timers
     m_connectionStatusTime.restart();
@@ -896,5 +886,7 @@ Wallet::~Wallet()
         qDebug("Error storing wallet cache");
     delete m_walletImpl;
     m_walletImpl = NULL;
+    delete m_walletListener;
+    m_walletListener = NULL;
     qDebug("m_walletImpl deleted");
 }

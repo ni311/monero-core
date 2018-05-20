@@ -42,7 +42,7 @@ Rectangle {
     function updateProgress(currentBlock,targetBlock, blocksToSync, statusTxt){
         if(targetBlock > 0) {
             var remaining = (currentBlock < targetBlock) ? targetBlock - currentBlock : 0
-            var progressLevel = (blocksToSync > 0 && blocksToSync != remaining) ? (100*(blocksToSync - remaining)/blocksToSync).toFixed(0) : 100*(currentBlock / targetBlock).toFixed(0)
+            var progressLevel = (blocksToSync > 0 && blocksToSync != remaining) ? (100*(blocksToSync - remaining)/blocksToSync).toFixed(0) : (100*(currentBlock / targetBlock)).toFixed(0)
             fillLevel = progressLevel
             if(typeof statusTxt != "undefined" && statusTxt != "") {
                 progressText.text = statusTxt;
@@ -100,7 +100,7 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 height: bar.height
-                property int maxWidth: bar.width - 4 * scaleRatio
+                property int maxWidth: bar.width * scaleRatio
                 width: (maxWidth * fillLevel) / 100
                 radius: 8
                 // could change color based on progressbar status; if(item.fillLevel < 99 )

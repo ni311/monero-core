@@ -79,7 +79,7 @@ Rectangle {
         var mixin = scaleValueToMixinCount(fillLevel)
         console.log("PrivacyLevel changed:"  + fillLevel)
         console.log("mixin count: "  + mixin)
-        privacyLabel.text = qsTr("Privacy level (ringsize %1)").arg(mixin+1) + translationManager.emptyString
+        privacyLabel.text = qsTr("Ring size: %1").arg(mixin+1) + translationManager.emptyString
     }
 
     function updateFromQrCode(address, payment_id, amount, tx_description, recipient_name) {
@@ -131,7 +131,7 @@ Rectangle {
               Layout.fillWidth: true
 
               radius: 2
-              border.color: Qt.rgba(255, 255, 255, 0.25)
+              border.color: Style.inputBorderColorInActive
               border.width: 1
               color: "transparent"
 
@@ -258,39 +258,8 @@ Rectangle {
                 Address <font size='2'>  ( </font> <a href='#'>Address book</a><font size='2'> )</font>")
                 + translationManager.emptyString
               labelButtonText: qsTr("Resolve") + translationManager.emptyString
-              placeholderText: "4.."
+              placeholderText: "4.. / 8.."
               onInputLabelLinkActivated: { appWindow.showPageRequest("AddressBook") }
-              onLabelButtonClicked: {
-                  var result = walletManager.resolveOpenAlias(addressLine.text)
-                  if (result) {
-                    var parts = result.split("|")
-                    if (parts.length == 2) {
-                      var address_ok = walletManager.addressValid(parts[1], appWindow.persistentSettings.nettype)
-                      if (parts[0] === "true") {
-                        if (address_ok) {
-                          addressLine.text = parts[1]
-                          addressLine.cursorPosition = 0
-                        }
-                        else
-                          oa_message(qsTr("No valid address found at this OpenAlias address"))
-                      } else if (parts[0] === "false") {
-                        if (address_ok) {
-                          addressLine.text = parts[1]
-                          addressLine.cursorPosition = 0
-                          oa_message(qsTr("Address found, but the DNSSEC signatures could not be verified, so this address may be spoofed"))
-                        } else {
-                          oa_message(qsTr("No valid address found at this OpenAlias address, but the DNSSEC signatures could not be verified, so this may be spoofed"))
-                        }
-                      } else {
-                        oa_message(qsTr("Internal error"))
-                      }
-                    } else {
-                      oa_message(qsTr("Internal error"))
-                    }
-                  } else {
-                    oa_message(qsTr("No address found"))
-                  }
-              }
           }
 
           StandardButton {
@@ -302,6 +271,52 @@ Rectangle {
               onClicked: {
                   cameraUi.state = "Capture"
                   cameraUi.qrcode_decoded.connect(updateFromQrCode)
+              }
+          }
+      }
+
+      StandardButton {
+          id: resolveButton
+          anchors.left: parent.left
+          width: 80
+          text: qsTr("Resolve") + translationManager.emptyString
+          visible: isValidOpenAliasAddress(addressLine.text)
+          enabled : isValidOpenAliasAddress(addressLine.text)
+          onClicked: {
+              var result = walletManager.resolveOpenAlias(addressLine.text)
+              if (result) {
+                  var parts = result.split("|")
+                  if (parts.length == 2) {
+                      var address_ok = walletManager.addressValid(parts[1], appWindow.persistentSettings.nettype)
+                      if (parts[0] === "true") {
+                          if (address_ok) {
+                              addressLine.text = parts[1]
+                              addressLine.cursorPosition = 0
+                          }
+                          else
+                              oa_message(qsTr("No valid address found at this OpenAlias address"))
+                      }
+                      else if (parts[0] === "false") {
+                            if (address_ok) {
+                                addressLine.text = parts[1]
+                                addressLine.cursorPosition = 0
+                                oa_message(qsTr("Address found, but the DNSSEC signatures could not be verified, so this address may be spoofed"))
+                            }
+                            else
+                            {
+                                oa_message(qsTr("No valid address found at this OpenAlias address, but the DNSSEC signatures could not be verified, so this may be spoofed"))
+                            }
+                      }
+                      else {
+                          oa_message(qsTr("Internal error"))
+                      }
+                  }
+                  else {
+                      oa_message(qsTr("Internal error"))
+                  }
+              }
+              else {
+                  oa_message(qsTr("No address found"))
               }
           }
       }
@@ -329,7 +344,8 @@ Rectangle {
       RowLayout {
           StandardButton {
               id: sendButton
-              rightIcon: "../images/rightIcon.png"
+              rightIcon: "../images/rightArrow.png"
+              rightIconInactive: "../images/rightArrowInactive.png"
               Layout.topMargin: 4 * scaleRatio
               text: qsTr("Send") + translationManager.emptyString
               // Send button is enabled when:

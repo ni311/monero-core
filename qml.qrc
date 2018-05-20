@@ -51,7 +51,6 @@
         <file>tabs/TweetsModel.qml</file>
         <file>components/Scroll.qml</file>
         <file>components/AddressBookTable.qml</file>
-        <file>components/SubaddressTable.qml</file>
         <file>images/deleteIcon.png</file>
         <file>images/moneroIcon.png</file>
         <file>components/StandardDropdown.qml</file>
@@ -76,7 +75,6 @@
         <file>components/HistoryTableMobile.qml</file>
         <file>images/gotoBasicVersion.png</file>
         <file>images/goToBasicVersionHovered.png</file>
-        <file>BasicPanel.qml</file>
         <file>images/moneroLogo2.png</file>
         <file>components/PrivacyLevelSmall.qml</file>
         <file>images/checkedVioletIcon.png</file>
@@ -205,5 +203,10 @@
         <file>js/TxUtils.js</file>
         <file>images/warning.png</file>
         <file>images/checkedBlackIcon.png</file>
+        <file>images/rightArrowInactive.png</file>
+        <file>js/Windows.js</file>
+        <file>js/Utils.js</file>
+        <file>components/RadioButton.qml</file>
+        <file>images/editIcon.png</file>
     </qresource>
 </RCC>
