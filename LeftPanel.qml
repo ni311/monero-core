@@ -72,6 +72,7 @@ Rectangle {
         else if(pos === "Sign") menuColumn.previousButton = signButton
         else if(pos === "Settings") menuColumn.previousButton = settingsButton
         else if(pos === "Advanced") menuColumn.previousButton = advancedButton
+        else if(pos === "Keys") menuColumn.previousButton = keysButton
 
         menuColumn.previousButton.checked = true
     }
@@ -252,7 +253,9 @@ Rectangle {
 
         Flickable {
             id:flicker
-            contentHeight: 500 * scaleRatio
+            contentHeight: (progressBar.visible)? menuColumn.height + separator.height + 
+                networkStatus.height + progressBar.height + daemonProgressBar.height : 
+                menuColumn.height + separator.height + networkStatus.height
             anchors.fill: parent
             clip: true
 
@@ -476,7 +479,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 text: qsTr("Shared RingDB") + translationManager.emptyString
-                symbol: qsTr("S") + translationManager.emptyString
+                symbol: qsTr("G") + translationManager.emptyString
                 dotColor: "#FFD781"
                 under: advancedButton
                 onClicked: {
@@ -568,15 +571,26 @@ Rectangle {
 
         } // Flickable
 
+        Rectangle {
+            id: separator
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 0
+            anchors.rightMargin: 0
+            anchors.bottom: networkStatus.top;
+            height: 10 * scaleRatio
+            color: "transparent"
+        }
+
         NetworkStatusItem {
             id: networkStatus
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 4
-            anchors.rightMargin: 4
+            anchors.leftMargin: 0
+            anchors.rightMargin: 0
             anchors.bottom: (progressBar.visible)? progressBar.top : parent.bottom;
             connected: Wallet.ConnectionStatus_Disconnected
-            height: 58 * scaleRatio
+            height: 48 * scaleRatio
         }
 
         ProgressBar {
@@ -584,7 +598,7 @@ Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: daemonProgressBar.top
-            height: 35 * scaleRatio
+            height: 48 * scaleRatio
             syncType: qsTr("Wallet")
             visible: networkStatus.connected
         }

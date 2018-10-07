@@ -69,11 +69,11 @@ Packaging for your favorite distribution would be a welcome contribution!
 
 ### On Linux:
 
-(Tested on Ubuntu 16.04 x86, 16.10 x64, Gentoo x64 and Linux Mint 18 "Sarah" - Cinnamon x64)
+(Tested on Ubuntu 17.10 x64, Ubuntu 18.04 x64 and Gentoo x64)
 
 1. Install Monero dependencies
 
-  - For Ubuntu and Mint
+  - For Debian distributions (Debian, Ubuntu, Mint, Tails...)
 
 	`sudo apt install build-essential cmake libboost-all-dev miniupnpc libunbound-dev graphviz doxygen libunwind8-dev pkg-config libssl-dev libzmq3-dev`
 
@@ -81,27 +81,13 @@ Packaging for your favorite distribution would be a welcome contribution!
 
 	`sudo emerge app-arch/xz-utils app-doc/doxygen dev-cpp/gtest dev-libs/boost dev-libs/expat dev-libs/openssl dev-util/cmake media-gfx/graphviz net-dns/unbound net-libs/ldns net-libs/miniupnpc net-libs/zeromq sys-libs/libunwind`
 
-2. Grab an up-to-date copy of the monero-gui repository
+2. Install Qt:
 
-	`git clone https://github.com/monero-project/monero-gui.git`
+  *Note*: Qt 5.7 is the minimum version required to build the GUI. This makes **some** distributions (mostly based on debian, like Ubuntu 16.x or Linux Mint 18.x) obsolete. You can still build the GUI if you install an [official Qt release](https://wiki.qt.io/Install_Qt_5_on_Ubuntu), but this is not officially supported.
 
-3. Go into the repository
+  - For Ubuntu 17.10+
 
-	`cd monero-gui`
-
-4. Install the GUI dependencies
-
-  - For Ubuntu 16.04 x86
-
-	`sudo apt install qtbase5-dev qt5-default qtdeclarative5-dev qml-module-qtquick-controls qml-module-qtquick-xmllistmodel qttools5-dev-tools qml-module-qtquick-dialogs`
-
-  - For Ubuntu 16.04+ x64
-
-    `sudo apt install qtbase5-dev qt5-default qtdeclarative5-dev qml-module-qtquick-controls qml-module-qtquick-xmllistmodel qttools5-dev-tools qml-module-qtquick-dialogs qml-module-qt-labs-settings libqt5qml-graphicaleffects`
-
-  - For Linux Mint 18 "Sarah" - Cinnamon x64
-
-    `sudo apt install qml-module-qt-labs-settings qml-module-qtgraphicaleffects`
+    `sudo apt install qtbase5-dev qt5-default qtdeclarative5-dev qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-dialogs qml-module-qtquick-xmllistmodel qml-module-qt-labs-settings qml-module-qt-labs-folderlistmodel qttools5-dev-tools`
 
   - For Gentoo
 
@@ -109,7 +95,7 @@ Packaging for your favorite distribution would be a welcome contribution!
 
   - Optional : To build the flag `WITH_SCANNER`
 
-    - For Ubuntu and Mint
+    - For Ubuntu
 
       `sudo apt install qtmultimedia5-dev qml-module-qtmultimedia libzbar-dev`
 
@@ -119,15 +105,17 @@ Packaging for your favorite distribution would be a welcome contribution!
 
       `emerge dev-qt/qtmultimedia:5 media-gfx/zbar`
 
-5. Build the GUI
 
-  - For Ubuntu and Mint
+3. Clone repository
 
-	`./build.sh`
+    `git clone https://github.com/monero-project/monero-gui.git`
 
-  - For Gentoo
+4. Build
 
-    `QT_SELECT=5 ./build.sh`
+    ```
+    cd monero-gui
+    QT_SELECT=5 ./build.sh
+    ```
 
 The executable can be found in the build/release/bin folder.
 
@@ -194,57 +182,47 @@ More info: http://stackoverflow.com/a/35098040/1683164
 
 ### On Windows:
 
-1. Install [msys2](http://msys2.github.io/), follow the instructions on that page on how to update packages to the latest versions
+The Monero GUI on Windows is 64 bits only; 32-bit Windows GUI builds are not officially supported anymore.
 
-2. Install Monero dependencies as described in [monero documentation](https://github.com/monero-project/monero) into msys2 environment
-   **As we only build application for x86, install only dependencies for x86 architecture (i686 in package name)**
-   ```
-   pacman -S mingw-w64-i686-toolchain make mingw-w64-i686-cmake mingw-w64-i686-boost mingw-w64-i686-openssl mingw-w64-i686-zeromq mingw-w64-i686-libsodium
+1. Install [MSYS2](https://www.msys2.org/), follow the instructions on that page on how to update system and packages to the latest versions
 
-   ```
+2. Open an 64-bit MSYS2 shell: Use the *MSYS2 MinGW 64-bit* shortcut, or use the `msys2_shell.cmd` batch file with a `-mingw64` parameter
 
-3. Install git into msys2 environment
+3. Install MSYS2 packages for Monero dependencies; the needed 64-bit packages have `x86_64` in their names
+
+    ```
+    pacman -S mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-boost mingw-w64-x86_64-openssl mingw-w64-x86_64-zeromq mingw-w64-x86_64-libsodium
+    ```
+
+    You find more details about those dependencies in the [Monero documentation](https://github.com/monero-project/monero). Note that that there is no more need to compile Boost from source; like everything else, you can install it now with a MSYS2 package.
+
+4. Install Qt5
+
+    ```
+    pacman -S mingw-w64-x86_64-qt5
+    ```
+
+    There is no more need to download some special installer from the Qt website, the standard MSYS2 package for Qt will do in almost all circumstances.
+
+5. Install git
 
     ```
     pacman -S git
     ```
 
-4. Install Qt5 from [official site](https://www.qt.io/download-open-source/)
-   - download unified installer, run and select following options:
-       - Qt > Qt 5.7 > MinGW 5.3.0 32 bit
-       - Tools > MinGW 5.3.0
-   - continue with installation
+6. Clone repository
 
-5. Open ```MinGW-w64 Win32 Shell``` shell
-
-   ```%MSYS_ROOT%\msys2_shell.cmd -mingw32```
-
-   Where ```%MSYS_ROOT%``` will be ```c:\msys32``` if your host OS is x86-based or ```c:\msys64``` if your host OS
-   is x64-based
-
-6. Install the latest version of boost, specifically the required static libraries
     ```
-    cd
-    wget http://sourceforge.net/projects/boost/files/boost/1.63.0/boost_1_63_0.tar.bz2
-    tar xjf boost_1_63_0.tar.bz2
-    cd boost_1_63_0
-    ./bootstrap.sh mingw
-    ./b2 --prefix=/mingw32/boost --layout=tagged --without-mpi --without-python toolset=gcc address-model=32 variant=debug,release link=static threading=multi runtime-link=static -j$(nproc) install
-    ```
-
-7. Clone repository
-    ```
-    cd
     git clone https://github.com/monero-project/monero-gui.git
     ```
 
-8. Build the GUI
+7. Build
+
     ```
     cd monero-gui
-    export PATH=$(ls -rd /c/Qt/5.[6,7,8]/mingw53_32/bin | head -1):$PATH
     ./build.sh
     cd build
     make deploy
     ```
 
-The executable can be found in the ```.\release\bin``` directory.
+The executable can be found in the `.\release\bin` directory.
